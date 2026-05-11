@@ -2433,10 +2433,17 @@ window.KGB_PAGES = (function () {
     }
   };
 
-  // restore saved config
+  // restore saved config (CREDENTIALS tidak di-overwrite dari localStorage)
   const savedCfg = localStorage.getItem("kgb-config");
   if (savedCfg) {
-    try { Object.assign(window.KGB_CONFIG, JSON.parse(savedCfg)); } catch (e) {}
+    try {
+      const saved = JSON.parse(savedCfg);
+      // Hanya restore URL, TTL, SpreadsheetID — BUKAN credentials
+      if (saved.APPS_SCRIPT_URL !== undefined) window.KGB_CONFIG.APPS_SCRIPT_URL = saved.APPS_SCRIPT_URL;
+      if (saved.SPREADSHEET_ID  !== undefined) window.KGB_CONFIG.SPREADSHEET_ID  = saved.SPREADSHEET_ID;
+      if (saved.CACHE_TTL_MIN   !== undefined) window.KGB_CONFIG.CACHE_TTL_MIN   = saved.CACHE_TTL_MIN;
+      // CREDENTIALS selalu dari code, tidak dari localStorage
+    } catch (e) {}
   }
 
   window.KGB = KGB;
