@@ -766,7 +766,7 @@ input, select { font-family: inherit; }
 
       <div class="field">
         <label for="username">Username</label>
-        <input id="username" type="text" name="username" placeholder="Username" required>
+        <input id="username" type="text" name="username" placeholder="admin / viewer" required>
       </div>
       <div class="field">
         <label for="password">Password</label>
@@ -895,15 +895,12 @@ window.KGB_CONFIG = {
   SPREADSHEET_ID: "1iomRVmNLKKzlRNvdVZIt7uI7dDFrlyh2C-1_3cBCVEk",
   SHEET_NAME: "INPUT_DATA",
   CACHE_TTL_MIN: 5,
-    CREDENTIALS: {
-    // ── ADMIN (hanya Wahyu Afandi) ──────────────────────────
+  CREDENTIALS: {
     wahyu:      { password: "KGB@admin2026",  role: "ADMIN",  display: "Wahyu Afandi"       },
-
-    // ── VIEWER — PT Borneo Indobara ─────────────────────────
     ptbib:      { password: "BIB@produksi",   role: "VIEWER", display: "PT Borneo Indobara" },
     supervisor: { password: "KGB@super2026",  role: "VIEWER", display: "Supervisor KGB"     },
     planteam:   { password: "KGB@plan2026",   role: "VIEWER", display: "Planning Team KGB"  },
-    management: { password: "KGB@mgmt2026",   role: "VIEWER", display: "Management BIB"     },
+    management: { password: "KGB@mgmt2026",   role: "VIEWER", display: "Management BIB"     }
   }
 };
 
@@ -1197,10 +1194,9 @@ window.KGB_PAGES = (function () {
     const obSpark = last7.map(r => r.aktualOB);
     const coalSpark = last7.map(r => r.aktualCoal);
 
-    // last 30 days vs plan — ambil 30 hari terakhir yang ada aktualnya
-    // sehingga penambahan bulan baru (Juni dst) tidak menggeser grafik
-    const rowsWithActual = rows.filter(r => r.hasActual);
-    const last30 = rowsWithActual.slice(-30);
+    // last 30 days vs plan — hanya hari yang ada data aktualnya
+    // Fix: tanpa ini, penambahan bulan baru (Jun, Jul, dst) menggeser grafik
+    const last30 = rows.filter(r => r.hasActual).slice(-30);
 
     // current month MTD (use today's month)
     const ym = today.tanggal.slice(0,7);
@@ -1389,9 +1385,7 @@ window.KGB_PAGES = (function () {
 
   function bindDashboard(rows) {
     const last7 = rows.filter(r => r.hasActual).slice(-7);
-    // Fix: ambil 30 hari terakhir yang ADA aktualnya
-    // Tanpa ini, penambahan bulan baru (Juni, Juli, dst) yang belum ada
-    // aktualnya akan menggeser grafik sehingga data Mei menghilang
+    // Fix: hanya hari yang ada aktualnya
     const last30 = rows.filter(r => r.hasActual).slice(-30);
     sparkline(document.getElementById("spark-ob"), last7.map(r => r.aktualOB), GREEN);
     sparkline(document.getElementById("spark-coal"), last7.map(r => r.aktualCoal), AMBER);
@@ -2263,10 +2257,12 @@ window.KGB_PAGES = (function () {
         // try cache
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
         if (cached && Date.now() - cached.t < ttl) {
-          // Re-apply hasActual saat load dari cache (cache lama mungkin belum punya field ini)
+          // Re-apply hasActual saat load dari cache
           this.rows = cached.rows.map(row => ({
             ...row,
-            hasActual: row.hasActual !== undefined ? row.hasActual : (Number(row.aktualOB) > 0 || Number(row.aktualCoal) > 0)
+            hasActual: row.hasActual !== undefined
+              ? row.hasActual
+              : (Number(row.aktualOB) > 0 || Number(row.aktualCoal) > 0)
           }));
           this.lastUpdate = new Date(cached.t);
           this.updateLastUpdate();
@@ -2276,7 +2272,7 @@ window.KGB_PAGES = (function () {
           const r = await fetch(url);
           const j = await r.json();
           if (j.ok) {
-            // Tambah hasActual: true jika ada data aktual OB atau Coal
+            // Tambah hasActual: baris dianggap ada data jika aktualOB>0 atau aktualCoal>0
             this.rows = j.rows.map(row => ({
               ...row,
               hasActual: (Number(row.aktualOB) > 0 || Number(row.aktualCoal) > 0)
@@ -2307,8 +2303,6 @@ window.KGB_PAGES = (function () {
 
     clearCache() {
       localStorage.removeItem(CACHE_KEY);
-      localStorage.removeItem("kgb-data");
-      localStorage.removeItem("kgb-last-fetch");
       this.toast("Cache dibersihkan. Memuat ulang...");
       setTimeout(() => location.reload(), 800);
     },
@@ -2433,16 +2427,15 @@ window.KGB_PAGES = (function () {
     }
   };
 
-  // restore saved config (CREDENTIALS tidak di-overwrite dari localStorage)
+  // restore saved config
   const savedCfg = localStorage.getItem("kgb-config");
   if (savedCfg) {
     try {
       const saved = JSON.parse(savedCfg);
-      // Hanya restore URL, TTL, SpreadsheetID — BUKAN credentials
+      // Hanya restore setting URL & TTL — CREDENTIALS selalu dari code
       if (saved.APPS_SCRIPT_URL !== undefined) window.KGB_CONFIG.APPS_SCRIPT_URL = saved.APPS_SCRIPT_URL;
       if (saved.SPREADSHEET_ID  !== undefined) window.KGB_CONFIG.SPREADSHEET_ID  = saved.SPREADSHEET_ID;
       if (saved.CACHE_TTL_MIN   !== undefined) window.KGB_CONFIG.CACHE_TTL_MIN   = saved.CACHE_TTL_MIN;
-      // CREDENTIALS selalu dari code, tidak dari localStorage
     } catch (e) {}
   }
 
