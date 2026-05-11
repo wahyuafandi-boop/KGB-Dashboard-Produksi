@@ -1194,9 +1194,8 @@ window.KGB_PAGES = (function () {
     const obSpark = last7.map(r => r.aktualOB);
     const coalSpark = last7.map(r => r.aktualCoal);
 
-    // last 30 days vs plan — hanya hari yang ada data aktualnya
-    // Fix: tanpa ini, penambahan bulan baru (Jun, Jul, dst) menggeser grafik
-    const last30 = rows.filter(r => r.hasActual).slice(-30);
+    // last 30 days vs plan — 30 baris terakhir bulan berjalan
+    const last30 = rows.slice(-30);
 
     // current month MTD (use today's month)
     const ym = today.tanggal.slice(0,7);
@@ -1385,8 +1384,7 @@ window.KGB_PAGES = (function () {
 
   function bindDashboard(rows) {
     const last7 = rows.filter(r => r.hasActual).slice(-7);
-    // Fix: hanya hari yang ada aktualnya
-    const last30 = rows.filter(r => r.hasActual).slice(-30);
+    const last30 = rows.slice(-30);
     sparkline(document.getElementById("spark-ob"), last7.map(r => r.aktualOB), GREEN);
     sparkline(document.getElementById("spark-coal"), last7.map(r => r.aktualCoal), AMBER);
     bindDailyVsPlanChart("chart-ob30", last30, "OB", GREEN);
