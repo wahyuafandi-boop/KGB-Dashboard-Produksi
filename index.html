@@ -2,7 +2,11 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#7A0F1A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>KGB Production · PT Borneo Indobara</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -721,6 +725,192 @@ input, select { font-family: inherit; }
 .settings-row textarea.code { font-family: var(--font-mono); font-size: 12px; min-height: 200px; }
 
 /* print */
+
+/* ============================================================
+   MOBILE / ANDROID RESPONSIVE — max-width 768px
+   Sidebar jadi bottom nav, layout stack vertical
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  /* ── Root vars override ── */
+  :root {
+    --topbar-h: 56px;
+    --sidebar-w: 0px;
+  }
+
+  /* ── Login page ── */
+  .login-stage {
+    grid-template-columns: 1fr !important;
+    width: 96vw !important;
+    max-width: 420px;
+  }
+  .login-hero { display: none !important; }
+  .login-form { padding: 32px 24px !important; border-radius: var(--radius-lg) !important; }
+
+  /* ── Shell: sidebar hilang, content full width ── */
+  .shell {
+    grid-template-columns: 1fr !important;
+    padding-bottom: 68px; /* ruang untuk bottom nav */
+  }
+
+  /* ── Sidebar jadi bottom navigation bar ── */
+  .sidebar {
+    position: fixed !important;
+    bottom: 0 !important; top: auto !important;
+    left: 0 !important; right: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    flex-direction: row !important;
+    z-index: 100 !important;
+    border-right: none !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+    overflow: visible !important;
+  }
+
+  /* Sembunyikan elemen sidebar yang tidak perlu di mobile */
+  .sidebar-head,
+  .pt-badge,
+  .nav-section,
+  .nav-section-title,
+  .sidebar-history,
+  #sidebar-history,
+  .user-block,
+  .nav-section-separator { display: none !important; }
+
+  /* Nav jadi horizontal scroll */
+  .nav {
+    display: flex !important;
+    flex-direction: row !important;
+    padding: 0 4px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    align-items: center !important;
+    gap: 0 !important;
+    width: 100% !important;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  /* Nav link jadi icon + label kecil, vertikal */
+  .nav-link {
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 6px 10px !important;
+    min-width: 60px !important;
+    height: 64px !important;
+    border-radius: 0 !important;
+    font-size: 9px !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+  }
+  .nav-link .nav-label { display: block !important; font-size: 9px !important; line-height: 1; }
+  .nav-link::before { display: none !important; }
+  .nav-link.active { background: rgba(255,255,255,0.08) !important; }
+  .nav-link.active::before { display: none !important; }
+
+  /* Sembunyikan nav-link admin settings di bottom bar kalau terlalu banyak */
+  .nav-link[data-page="settings"] { display: none !important; }
+
+  /* ── Topbar ── */
+  .topbar {
+    padding: 0 14px !important;
+    gap: 8px !important;
+  }
+  .topbar h1 { font-size: 15px !important; }
+  .topbar .crumb { font-size: 10px !important; }
+  .topbar .meta { gap: 8px !important; }
+  .topbar .meta .pill { padding: 4px 8px !important; font-size: 10px !important; }
+  /* Sembunyikan beberapa meta item di topbar */
+  .topbar .meta > *:not(:last-child):not(:nth-last-child(2)) { display: none !important; }
+
+  /* ── Page content ── */
+  .page { padding: 14px 12px 20px !important; }
+  .page-head { margin-bottom: 12px !important; }
+  .page-head h2 { font-size: 17px !important; }
+  .page-head .desc { font-size: 12px !important; }
+  .page-head .actions { gap: 6px !important; }
+
+  /* ── KPI row ── */
+  .kpi-row { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .kpi { padding: 12px !important; }
+  .kpi .val { font-size: 20px !important; }
+  .kpi .label { font-size: 10px !important; }
+
+  /* ── Cards & grids ── */
+  .grid-2, .grid-3, .mtd-row,
+  .row-2, .row-3, .row-4, .row-21 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* ── Charts: height lebih kecil di mobile ── */
+  .chart-wrap { height: 200px !important; }
+  .chart-wrap.tall { height: 220px !important; }
+  .chart-wrap-lg { height: 220px !important; }
+
+  /* ── Card padding ── */
+  .card { padding: 12px !important; }
+  .card-title { font-size: 12px !important; }
+  .card-sub { font-size: 11px !important; }
+
+  /* ── Section title ── */
+  .section-title { font-size: 10px !important; margin: 16px 0 8px !important; }
+
+  /* ── Tables: horizontal scroll ── */
+  .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+  .tbl { min-width: 600px !important; font-size: 11px !important; }
+  .tbl th, .tbl td { padding: 6px 8px !important; }
+
+  /* ── MTD cards di overview ── */
+  .mtd-acc-card { padding: 12px !important; }
+
+  /* ── Progress bars ── */
+  .progress-track { height: 6px !important; }
+
+  /* ── Spark charts ── */
+  .spark-wrap { height: 40px !important; }
+
+  /* ── Overview row khusus (2 card OB & Coal achievement) ── */
+  .row-2 { grid-template-columns: 1fr !important; }
+
+  /* ── Badge & pills ── */
+  .badge { font-size: 10px !important; padding: 2px 6px !important; }
+
+  /* ── Select & input ── */
+  .select, select { font-size: 13px !important; }
+
+  /* ── Tombol action ── */
+  .icon-btn { width: 32px !important; height: 32px !important; }
+  .btn-primary { padding: 10px 16px !important; font-size: 13px !important; }
+
+  /* ── Settings page: form layout ── */
+  .settings-grid { grid-template-columns: 1fr !important; }
+  .lbl { font-size: 12px !important; }
+
+  /* ── Scatter/chart legends ── */
+  .legend { flex-wrap: wrap !important; gap: 6px !important; font-size: 10px !important; }
+  .legend-item { font-size: 10px !important; }
+  .legend-swatch { width: 8px !important; height: 8px !important; }
+
+  /* ── Page head actions align ── */
+  .page-head { flex-direction: column !important; align-items: flex-start !important; }
+
+  /* ── Toast notification ── */
+  .toast { bottom: 76px !important; right: 12px !important; font-size: 12px !important; }
+
+  /* ── Sembunyikan detail yang terlalu ramai di mobile ── */
+  .topbar .meta .lbl { display: none !important; }
+}
+
+/* ── Tambahan untuk HP kecil (< 400px) ── */
+@media (max-width: 400px) {
+  .kpi-row { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .nav-link { min-width: 52px !important; font-size: 8px !important; }
+  .page { padding: 10px 8px 16px !important; }
+}
+
 @media print {
   .sidebar, .topbar, .actions, .table-toolbar, .pagination { display: none !important; }
   .shell { grid-template-columns: 1fr !important; }
@@ -2436,6 +2626,32 @@ window.KGB_PAGES = (function () {
       if (saved.CACHE_TTL_MIN   !== undefined) window.KGB_CONFIG.CACHE_TTL_MIN   = saved.CACHE_TTL_MIN;
     } catch (e) {}
   }
+
+
+  // ── MOBILE: touch swipe & resize handler ────────────────────
+  (function() {
+    function isMobile() { return window.innerWidth <= 768; }
+
+    // Collapse sidebar by default on mobile (sudah ditangani CSS)
+    function handleResize() {
+      const shell = document.getElementById('shell');
+      if (!shell) return;
+      if (isMobile()) {
+        shell.classList.remove('is-collapsed');
+      }
+    }
+
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('DOMContentLoaded', function() {
+      handleResize();
+
+      // Sembunyikan toggle sidebar button di mobile
+      const toggleBtn = document.querySelector('.toggle-btn');
+      if (toggleBtn && isMobile()) {
+        toggleBtn.style.display = 'none';
+      }
+    });
+  })();
 
   window.KGB = KGB;
   document.addEventListener("DOMContentLoaded", () => KGB.init());
