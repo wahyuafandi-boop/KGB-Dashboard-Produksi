@@ -766,7 +766,7 @@ input, select { font-family: inherit; }
 
       <div class="field">
         <label for="username">Username</label>
-        <input id="username" type="text" name="username" placeholder="admin / viewer" required>
+        <input id="username" type="text" name="username" placeholder="Username" required>
       </div>
       <div class="field">
         <label for="password">Password</label>
@@ -775,12 +775,6 @@ input, select { font-family: inherit; }
       <div class="err" id="login-err"></div>
 
       <button class="btn-primary" type="submit">Login</button>
-
-      <div class="demo-creds">
-        <strong style="color: var(--amber-400);">Demo credentials</strong><br>
-        Admin: <code>admin / kgb2026</code><br>
-        Viewer: <code>viewer / produksi123</code>
-      </div>
     </form>
   </div>
 </section>
@@ -901,9 +895,15 @@ window.KGB_CONFIG = {
   SPREADSHEET_ID: "1iomRVmNLKKzlRNvdVZIt7uI7dDFrlyh2C-1_3cBCVEk",
   SHEET_NAME: "INPUT_DATA",
   CACHE_TTL_MIN: 5,
-  CREDENTIALS: {
-    admin:  { password: "kgb2026",     role: "ADMIN",  display: "Admin KGB"   },
-    viewer: { password: "produksi123", role: "VIEWER", display: "Viewer Ops"  }
+    CREDENTIALS: {
+    // ── ADMIN (hanya Wahyu Afandi) ──────────────────────────
+    wahyu:      { password: "KGB@admin2026",  role: "ADMIN",  display: "Wahyu Afandi"       },
+
+    // ── VIEWER — PT Borneo Indobara ─────────────────────────
+    ptbib:      { password: "BIB@produksi",   role: "VIEWER", display: "PT Borneo Indobara" },
+    supervisor: { password: "KGB@super2026",  role: "VIEWER", display: "Supervisor KGB"     },
+    planteam:   { password: "KGB@plan2026",   role: "VIEWER", display: "Planning Team KGB"  },
+    management: { password: "KGB@mgmt2026",   role: "VIEWER", display: "Management BIB"     },
   }
 };
 
@@ -1197,8 +1197,10 @@ window.KGB_PAGES = (function () {
     const obSpark = last7.map(r => r.aktualOB);
     const coalSpark = last7.map(r => r.aktualCoal);
 
-    // last 30 days vs plan
-    const last30 = rows.slice(-30);
+    // last 30 days vs plan — ambil 30 hari terakhir yang ada aktualnya
+    // sehingga penambahan bulan baru (Juni dst) tidak menggeser grafik
+    const rowsWithActual = rows.filter(r => r.hasActual);
+    const last30 = rowsWithActual.slice(-30);
 
     // current month MTD (use today's month)
     const ym = today.tanggal.slice(0,7);
@@ -1387,7 +1389,10 @@ window.KGB_PAGES = (function () {
 
   function bindDashboard(rows) {
     const last7 = rows.filter(r => r.hasActual).slice(-7);
-    const last30 = rows.slice(-30);
+    // Fix: ambil 30 hari terakhir yang ADA aktualnya
+    // Tanpa ini, penambahan bulan baru (Juni, Juli, dst) yang belum ada
+    // aktualnya akan menggeser grafik sehingga data Mei menghilang
+    const last30 = rows.filter(r => r.hasActual).slice(-30);
     sparkline(document.getElementById("spark-ob"), last7.map(r => r.aktualOB), GREEN);
     sparkline(document.getElementById("spark-coal"), last7.map(r => r.aktualCoal), AMBER);
     bindDailyVsPlanChart("chart-ob30", last30, "OB", GREEN);
@@ -2098,7 +2103,7 @@ window.KGB_PAGES = (function () {
         </div>
         <div style="display: flex; gap: 8px; margin-top: 14px;">
           <button class="btn-primary" style="background: var(--slate-800); color: #fff;" onclick="KGB.saveSettings()">Simpan Konfigurasi</button>
-          <button class="btn ghost" style="background: #fff; border: 1px solid var(--slate-200); padding: 12px 16px; border-radius: 10px;" onclick="localStorage.removeItem('kgb-cache'); KGB.toast('Cache dibersihkan')">Clear Cache</button>
+          <button class="btn ghost" style="background: #fff; border: 1px solid var(--slate-200); padding: 12px 16px; border-radius: 10px;" onclick="KGB.clearCache()">Clear Cache</button>
         </div>
       </div>
     `;
@@ -2258,7 +2263,11 @@ window.KGB_PAGES = (function () {
         // try cache
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
         if (cached && Date.now() - cached.t < ttl) {
-          this.rows = cached.rows;
+          // Re-apply hasActual saat load dari cache (cache lama mungkin belum punya field ini)
+          this.rows = cached.rows.map(row => ({
+            ...row,
+            hasActual: row.hasActual !== undefined ? row.hasActual : (Number(row.aktualOB) > 0 || Number(row.aktualCoal) > 0)
+          }));
           this.lastUpdate = new Date(cached.t);
           this.updateLastUpdate();
           return;
@@ -2267,7 +2276,11 @@ window.KGB_PAGES = (function () {
           const r = await fetch(url);
           const j = await r.json();
           if (j.ok) {
-            this.rows = j.rows;
+            // Tambah hasActual: true jika ada data aktual OB atau Coal
+            this.rows = j.rows.map(row => ({
+              ...row,
+              hasActual: (Number(row.aktualOB) > 0 || Number(row.aktualCoal) > 0)
+            }));
             this.lastUpdate = new Date();
             localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), rows: this.rows }));
             this.updateLastUpdate();
@@ -2290,6 +2303,14 @@ window.KGB_PAGES = (function () {
         const d = this.lastUpdate;
         el.textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
       }
+    },
+
+    clearCache() {
+      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem("kgb-data");
+      localStorage.removeItem("kgb-last-fetch");
+      this.toast("Cache dibersihkan. Memuat ulang...");
+      setTimeout(() => location.reload(), 800);
     },
 
     async refresh() {
